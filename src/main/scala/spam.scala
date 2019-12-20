@@ -134,18 +134,23 @@ object spam {
     // Cross validation
     // =======================================================
 
-    //lr
+    // lr
 //    val paramGrid = new ParamGridBuilder()
-//      .addGrid(hashingTF.numFeatures, Array(2000, 5000))
+//      .addGrid(hashingTF.numFeatures, Array(5000))
 //      .addGrid(lr.maxIter, Array(1000))
 //      .addGrid(lr.regParam, Array(0.2, 0.5, 0.7))
 //      .build()
 
     // svm
     val paramGrid = new ParamGridBuilder()
-      .addGrid(hashingTF.numFeatures, Array(2000,5000))
+      .addGrid(hashingTF.numFeatures, Array(5000))
       .addGrid(lsvc.maxIter, Array(1000))
       .build()
+
+    // bayes / decision tree
+//    val paramGrid = new ParamGridBuilder()
+//      .addGrid(hashingTF.numFeatures, Array(5000))
+//      .build()
 
     val cv = new CrossValidator()
       .setEstimator(pipeline)
@@ -157,13 +162,12 @@ object spam {
     val result = cvModel.transform(testing_url)
 
 //    printMetric("accuracy", result, "Linear Regression")
-//    printMetric("weightedPrecision", result, "Linear Regression")
-//    printMetric("weightedRecall", result, "Linear Regression")
 //    printMetric("f1", result, "Linear Regression")
 
+//    printMetric("accuracy", result, "Naive Bayes")
+//    printMetric("f1", result, "Naive Bayes")
+
     printMetric("accuracy", result, "SVM")
-    printMetric("weightedPrecision", result, "SVM")
-    printMetric("weightedRecall", result, "SVM")
     printMetric("f1", result, "SVM")
 
   }
