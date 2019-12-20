@@ -63,15 +63,15 @@ object spam {
     val testing_url = testing_df.withColumn("url", isUrlUDF(testing_df.col("sentences")))
 
     // set a UDF to check whether a sentence contains phone number
-//    val regexStr: String = "^[0-9]{10}$"
-//    val pattern = Pattern.compile(regexStr)
-//    val hasNumber: String => Boolean = { t => { val matcher = pattern.matcher(t.toString)
-//                                                return matcher.matches()}
-//                                        }
-//    val isNumber = udf(hasNumber)
-//
-//    val training_number = training_url.withColumn("number", isNumber(training_df.col("sentences")))
-//    val testing_number = testing_url.withColumn("number", isNumber(testing_df.col("sentences")))
+    //    val regexStr: String = "^[0-9]{10}$"
+    //    val pattern = Pattern.compile(regexStr)
+    //    val hasNumber: String => Boolean = { t => { val matcher = pattern.matcher(t.toString)
+    //                                                return matcher.matches()}
+    //                                        }
+    //    val isNumber = udf(hasNumber)
+    //
+    //    val training_number = training_url.withColumn("number", isNumber(training_df.col("sentences")))
+    //    val testing_number = testing_url.withColumn("number", isNumber(testing_df.col("sentences")))
 
     val tokenizer = new Tokenizer().setInputCol("sentences").setOutputCol("words")
 
@@ -108,21 +108,21 @@ object spam {
 
     // - SVM
     val lsvc = new LinearSVC()
-    val svm = lsvc.setMaxIter(10).setRegParam(0.1)
+    //    val svm = lsvc.setMaxIter(10).setRegParam(0.1)
 
     // - Logistic Regression
     val lr = new LogisticRegression()
-//    val lr_model = lr
-//      .setMaxIter(10)
-//      .setRegParam(0.3)
-//      .setElasticNetParam(0.8)
-//      .setFamily("multinomial")
+    //    val lr_model = lr
+    //      .setMaxIter(10)
+    //      .setRegParam(0.3)
+    //      .setElasticNetParam(0.8)
+    //      .setFamily("multinomial")
 
     // - Decision tree
     val dt = new DecisionTreeClassifier()
-//    val dt_model = dt
-//      .setLabelCol("label")
-//      .setFeaturesCol("features")
+    //    val dt_model = dt
+    //      .setLabelCol("label")
+    //      .setFeaturesCol("features")
 
     val pipeline = new Pipeline()
       .setStages(Array(tokenizer, remover, stemmer, hashingTF, idf, assembler, lsvc))
@@ -135,22 +135,23 @@ object spam {
     // =======================================================
 
     // lr
-//    val paramGrid = new ParamGridBuilder()
-//      .addGrid(hashingTF.numFeatures, Array(5000))
-//      .addGrid(lr.maxIter, Array(1000))
-//      .addGrid(lr.regParam, Array(0.2, 0.5, 0.7))
-//      .build()
+    //    val paramGrid = new ParamGridBuilder()
+    //      .addGrid(hashingTF.numFeatures, Array(5000))
+    //      .addGrid(lr.maxIter, Array(1000))
+    //      .addGrid(lr.regParam, Array(0.2, 0.5, 0.7))
+    //      .build()
 
     // svm
     val paramGrid = new ParamGridBuilder()
       .addGrid(hashingTF.numFeatures, Array(5000))
-      .addGrid(lsvc.maxIter, Array(1000))
+      .addGrid(lsvc.maxIter, Array(2000))
+      .addGrid(lsvc.regParam, Array(0.0, 0.1, 0.2, 0, 3, 0.5, 0.7))
       .build()
 
     // bayes / decision tree
-//    val paramGrid = new ParamGridBuilder()
-//      .addGrid(hashingTF.numFeatures, Array(5000))
-//      .build()
+    //    val paramGrid = new ParamGridBuilder()
+    //      .addGrid(hashingTF.numFeatures, Array(5000))
+    //      .build()
 
     val cv = new CrossValidator()
       .setEstimator(pipeline)
@@ -161,11 +162,11 @@ object spam {
     val cvModel = cv.fit(training_url)
     val result = cvModel.transform(testing_url)
 
-//    printMetric("accuracy", result, "Linear Regression")
-//    printMetric("f1", result, "Linear Regression")
+    //    printMetric("accuracy", result, "Linear Regression")
+    //    printMetric("f1", result, "Linear Regression")
 
-//    printMetric("accuracy", result, "Naive Bayes")
-//    printMetric("f1", result, "Naive Bayes")
+    //    printMetric("accuracy", result, "Naive Bayes")
+    //    printMetric("f1", result, "Naive Bayes")
 
     printMetric("accuracy", result, "SVM")
     printMetric("f1", result, "SVM")
