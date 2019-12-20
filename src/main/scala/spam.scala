@@ -7,13 +7,11 @@
 
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{DecisionTreeClassifier, LinearSVC, LogisticRegression, NaiveBayes}
-import org.apache.spark.ml.evaluation.{BinaryClassificationEvaluator, MulticlassClassificationEvaluator}
+import org.apache.spark.ml.evaluation.{MulticlassClassificationEvaluator}
 import org.apache.spark.ml.feature.{HashingTF, IDF, StopWordsRemover, Tokenizer, VectorAssembler}
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.mllib.feature.Stemmer
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.ml.linalg.Vector
-import java.util.regex.Pattern
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object spam {
 
@@ -52,7 +50,7 @@ object spam {
     val testing_df = testing_dataset.toDF("sentences", "label", "dataset")
 
     // =======================================================
-    // Feature representation: Bag of Words, URLs
+    // Feature engineering: Bag of Words, URLs, TF-IDF
     // =======================================================
 
     import org.apache.spark.sql.functions._
@@ -87,10 +85,6 @@ object spam {
       .setInputCol("words_noStopWords")
       .setOutputCol("words_filtered")
       .setLanguage("English")
-
-    // =======================================================
-    // Feature weighting: TF-IDF
-    // =======================================================
 
     // applying Hashing TF to convert input words into feature vectors
     val hashingTF = new HashingTF().setInputCol("words_filtered").setOutputCol("rawFeatures").setNumFeatures(2000)
@@ -140,8 +134,16 @@ object spam {
     // Cross validation
     // =======================================================
 
+    //lr
+//    val paramGrid = new ParamGridBuilder()
+//      .addGrid(hashingTF.numFeatures, Array(2000, 5000))
+//      .addGrid(lr.maxIter, Array(1000))
+//      .addGrid(lr.regParam, Array(0.2, 0.5, 0.7))
+//      .build()
+
+    // svm
     val paramGrid = new ParamGridBuilder()
-      .addGrid(hashingTF.numFeatures, Array(2000, 5000))
+      .addGrid(hashingTF.numFeatures, Array(2000,5000))
       .addGrid(lsvc.maxIter, Array(1000))
       .build()
 
@@ -149,24 +151,20 @@ object spam {
       .setEstimator(pipeline)
       .setEvaluator(new MulticlassClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(2)
+      .setNumFolds(10)
 
-    // Run cross-validation, and choose the best set of parameters.
     val cvModel = cv.fit(training_url)
     val result = cvModel.transform(testing_url)
 
-    // print metrics
+//    printMetric("accuracy", result, "Linear Regression")
+//    printMetric("weightedPrecision", result, "Linear Regression")
+//    printMetric("weightedRecall", result, "Linear Regression")
+//    printMetric("f1", result, "Linear Regression")
+
     printMetric("accuracy", result, "SVM")
+    printMetric("weightedPrecision", result, "SVM")
+    printMetric("weightedRecall", result, "SVM")
     printMetric("f1", result, "SVM")
-
-    // =======================================================
-    // Classifier Evaluation: Accuracy, F1-score
-    // =======================================================
-
-    //    printMetric("accuracy", test, "SVM")
-    //    printMetric("weightedPrecision", bayes_predictions, "Bayes")
-    //    printMetric("weightedRecall", bayes_predictions, "Bayes")
-    //    printMetric("f1", test, "SVM")
 
   }
 
